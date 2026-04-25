@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Halden 71 — Forge &amp; Patina</title>
+  <meta name="description" content="The Halden 71. A three-piece forged wheel, originally cast in 1971 for a Le Mans privateer team. Reissued by craft in Cologne." />
+
+  <!-- Google Fonts: Cormorant Garamond for headings, DM Sans for body/UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+
+    /* ============================================================
+       DESIGN TOKENS — single source of truth.
+       Change a value here and it updates everywhere on the page.
+    ============================================================ */
+    :root {
+      /* Colours */
+      --parchment:  #F4EFE6;   /* primary background — warm off-white */
+      --ink:        #1C1814;   /* dark sections, primary text — warm near-black */
+      --bronze:     #B8824A;   /* accent — CTA, hairlines, highlights */
+      --stone:      #8A7F76;   /* secondary text, captions, nav */
+      --warm-white: #EAE4DB;   /* alternate light section background */
+      --dust:       #D4CDC4;   /* borders and dividers */
+
+      /* Typography */
+      --serif: 'Cormorant Garamond', Georgia, serif;
+      --sans:  'DM Sans', system-ui, -apple-system, sans-serif;
+    }
+
+
+    /* ============================================================
+       RESET + BASE
+    ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--sans);
+      font-weight: 300;
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--ink);
+      background: var(--parchment);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Buttons inherit body font — browser default overrides this otherwise */
+    button {
+      font: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+
+    /* ============================================================
+       UTILITY: SECTION LABEL
+       "SINCE 1971", "TECHNICAL DATA", "ATELIER" — small uppercase
+       eyebrow text that sits above a heading.
+    ============================================================ */
+    .label {
+      display: block;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--stone);
+    }
+
+    /* UTILITY: BRONZE HAIRLINE RULE */
+    .rule {
+      display: block;
+      width: 40px;
+      height: 1px;
+      background: var(--bronze);
+      margin: 18px 0 26px;
+    }
+
+
+    /* ============================================================
+       SCROLL ANIMATIONS
+       Elements with [data-animate] start invisible and slightly
+       low. When they enter the viewport, JavaScript adds
+       .is-visible — which triggers these CSS transitions.
+       Timing is deliberately slow and editorial (1000ms).
+    ============================================================ */
+    [data-animate] {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1000ms ease, transform 1000ms ease;
+    }
+
+    [data-animate].is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* HERO ANIMATIONS
+       Separate from scroll animations — these fire on page load
+       via setTimeout (see JS). The title also has a vertical offset;
+       other hero elements just fade. */
+    [data-hero] {
+      opacity: 0;
+      transition: opacity 900ms ease, transform 900ms ease;
+    }
+
+    [data-hero="title"] {
+      transform: translateY(24px);  /* slides up as it fades in */
+    }
+
+    [data-hero].is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+
+    /* ============================================================
+       HEADER
+       Fixed at the top. Transparent over the hero so the image
+       shows through; gets a solid ink background after 80px scroll.
+    ============================================================ */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 64px;
+      /* JS adds .scrolled — these properties transition to their new values */
+      transition: background 400ms ease, border-color 400ms ease;
+    }
+
+    .header.scrolled {
+      background: var(--ink);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .header__inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      height: 100%;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header__logo {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--parchment);
+    }
+
+    .header__nav {
+      display: flex;
+      gap: 36px;
+    }
+
+    .header__nav a {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--stone);
+      position: relative;
+      transition: color 300ms ease;
+    }
+
+    /* Underline slides in from the left on hover or when active */
+    .header__nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: var(--bronze);
+      transition: width 300ms ease;
+    }
+
+    .header__nav a:hover {
+      color: var(--parchment);
+    }
+
+    .header__nav a:hover::after,
+    .header__nav a.active::after {
+      width: 100%;
+    }
+
+    .header__nav a.active {
+      color: var(--parchment);
+    }
+
+
+    /* ============================================================
+       BUTTON — "Configure" CTA
+       Bronze border, transparent fill. On hover, a bronze fill
+       slides in from the left beneath the text.
+    ============================================================ */
+    .btn {
+      display: inline-block;
+      padding: 14px 36px;
+      border: 1px solid var(--bronze);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      position: relative;
+      overflow: hidden;
+      transition: color 350ms ease;
+    }
+
+    /* Text sits on top of the fill (z-index: 1 > pseudo-element z-index: 0) */
+    .btn__text {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* The fill that slides in from the left on hover */
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--bronze);
+      transform: translateX(-101%);   /* start fully off-screen to the left */
+      transition: transform 350ms ease;
+      z-index: 0;
+    }
+
+    .btn:hover::before {
+      transform: translateX(0);       /* slide into view */
+    }
+
+    .btn:hover {
+      color: var(--ink);              /* text goes dark on the bronze fill */
+    }
+
+
+    /* ============================================================
+       HERO — 45/55 split layout
+       Left panel: dark ink, text. Right panel: hero-wheel.jpg.
+       Using a CSS Grid split preserves the portrait image's
+       composition at all viewport widths.
+    ============================================================ */
+    .hero {
+      display: grid;
+      grid-template-columns: 45fr 55fr;
+      min-height: 100vh;
+    }
+
+    /* LEFT: dark text panel */
+    .hero__text {
+      background: var(--ink);
+      position: relative;          /* needed for absolutely-positioned brand label */
+      display: flex;
+      align-items: center;
+      padding: 100px 64px 80px;
+    }
+
+    /* Brand name anchored to the top of the panel, above the centered content */
+    .hero__brand {
+      position: absolute;
+      top: 104px;   /* 64px header + 40px breathing room */
+      left: 64px;
+    }
+
+    /* The product name, tagline, rule, and button — vertically centered */
+    .hero__content {
+      width: 100%;
+    }
+
+    .hero__title {
+      font-family: var(--serif);
+      font-size: clamp(56px, 6.5vw, 96px);
+      font-weight: 300;
+      line-height: 1.0;
+      letter-spacing: 0.02em;
+      color: var(--parchment);
+      margin-bottom: 28px;
+    }
+
+    .hero__tagline {
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--stone);
+    }
+
+    .hero__rule {
+      width: 40px;
+      height: 1px;
+      background: var(--bronze);
+      margin: 28px 0 36px;
+    }
+
+    /* RIGHT: the wheel image, fills the panel */
+    .hero__image {
+      overflow: hidden;
+    }
+
+    .hero__image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+
+    /* ============================================================
+       HERITAGE — centered editorial text section
+    ============================================================ */
+    .heritage {
+      background: var(--parchment);
+      padding: 120px 40px;
+      text-align: center;
+    }
+
+    .heritage__inner {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    /* Override the utility .rule for Heritage — center it */
+    .heritage .rule {
+      margin: 18px auto 32px;
+    }
+
+    .heritage__heading {
+      font-family: var(--serif);
+      font-size: clamp(34px, 4vw, 52px);
+      font-weight: 300;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 44px;
+    }
+
+    .heritage__copy p {
+      font-size: 17px;
+      font-weight: 300;
+      line-height: 1.85;
+      color: var(--ink);
+      margin-bottom: 22px;
+    }
+
+    .heritage__copy p:last-child {
+      margin-bottom: 0;
+      /* The closing line: "The Halden 71 is what they built." */
+      font-family: var(--serif);
+      font-size: 22px;
+      font-style: italic;
+      color: var(--stone);
+    }
+
+
+    /* ============================================================
+       SPECS — technical data + finish swatches
+    ============================================================ */
+    .specs {
+      background: var(--warm-white);
+      padding: 100px 40px;
+    }
+
+    .specs__inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .specs__heading {
+      font-family: var(--serif);
+      font-size: clamp(28px, 3vw, 40px);
+      font-weight: 300;
+      color: var(--ink);
+      margin-bottom: 36px;
+    }
+
+    /* Definition list used for semantic key/value pairs */
+    .specs__table {
+      list-style: none;
+    }
+
+    .specs__row {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--dust);
+    }
+
+    .specs__row:first-child {
+      border-top: 1px solid var(--dust);
+    }
+
+    .specs__row dt {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--stone);
+      padding-top: 2px;   /* optical alignment with dd */
+    }
+
+    .specs__row dd {
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--ink);
+    }
+
+    /* Size selector buttons below the spec table */
+    .specs__sizes {
+      margin-top: 44px;
+    }
+
+    .specs__sizes .label {
+      margin-bottom: 14px;
+    }
+
+    .size-options {
+      display: flex;
+      gap: 10px;
+    }
+
+    .size-option {
+      border: 1px solid var(--dust);
+      padding: 10px 22px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--stone);
+      transition: border-color 300ms ease, color 300ms ease, background 300ms ease;
+    }
+
+    .size-option:hover,
+    .size-option.active {
+      border-color: var(--bronze);
+      color: var(--ink);
+      background: rgba(184, 130, 74, 0.06);
+    }
+
+    /* Finish swatches */
+    .specs__finishes .label {
+      margin-bottom: 30px;
+    }
+
+    .finishes {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .finish {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    /* The colour block representing each finish */
+    .finish__swatch {
+      width: 84px;
+      height: 84px;
+      flex-shrink: 0;
+    }
+
+    /* Polished Bronze: warm diagonal gradient simulates the metallic sheen */
+    .finish__swatch--bronze {
+      background: linear-gradient(
+        135deg,
+        #D4A45A 0%,
+        #B8824A 38%,
+        #9E6E3A 65%,
+        #C4924A 100%
+      );
+    }
+
+    /* Brushed Magnesium: horizontal stripes simulate a brushed grain */
+    .finish__swatch--magnesium {
+      background: repeating-linear-gradient(
+        90deg,
+        #ABABAB 0px,
+        #9A9390 4px,
+        #B2B0AE 8px,
+        #9A9390 12px
+      );
+    }
+
+    .finish__name {
+      display: block;
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--ink);
+      margin-bottom: 5px;
+    }
+
+    .finish__code {
+      font-family: var(--sans);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--stone);
+    }
+
+
+    /* ============================================================
+       GALLERY — dark, asymmetric 3-image grid
+       Portrait image on the left spans both rows.
+       Two landscape images stack in the right column.
+    ============================================================ */
+    .gallery {
+      background: var(--ink);
+      padding-top: 80px;
+    }
+
+    .gallery__header {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 40px 36px;
+    }
+
+    .gallery__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 380px 380px;
+      gap: 4px;
+    }
+
+    .gallery__item {
+      overflow: hidden;
+    }
+
+    /* Left item spans both rows, creating the tall portrait slot */
+    .gallery__item--tall {
+      grid-row: 1 / 3;
+    }
+
+    .gallery__item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      /* Very slight scale on hover — barely perceptible, just warm */
+      transition: transform 600ms ease;
+    }
+
+    .gallery__item:hover img {
+      transform: scale(1.02);
+    }
+
+    .gallery__caption {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 22px 40px 80px;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--stone);
+      text-align: right;
+      opacity: 0.7;
+    }
+
+
+    /* ============================================================
+       CONSTRUCTION / ATELIER
+       Full-width workshop image, then a two-column body:
+       left column is intentional negative space; right has text.
+       The emptiness on the left is part of the editorial design.
+    ============================================================ */
+    .construction {
+      background: var(--ink);
+      padding-bottom: 100px;
+    }
+
+    .construction__image {
+      width: 100%;
+      height: 520px;
+      overflow: hidden;
+    }
+
+    .construction__image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    /* 55% negative space / 45% text content */
+    .construction__body {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 80px 40px 0;
+      display: grid;
+      grid-template-columns: 55fr 45fr;
+      gap: 60px;
+    }
+
+    /* Left column: intentionally empty — no styles needed */
+
+    .construction__text .label {
+      color: var(--stone);
+      margin-bottom: 0;
+    }
+
+    .construction__text .rule {
+      margin: 18px 0 28px;
+    }
+
+    .construction__heading {
+      font-family: var(--serif);
+      font-size: clamp(30px, 3.5vw, 48px);
+      font-weight: 300;
+      line-height: 1.15;
+      color: var(--parchment);
+      margin-bottom: 30px;
+    }
+
+    .construction__copy {
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.85;
+      color: var(--stone);
+    }
+
+    .construction__copy p + p {
+      margin-top: 16px;
+    }
+
+    /* The closing line — restrained, emphatic */
+    .construction__copy p:last-child {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-style: italic;
+      color: rgba(138, 127, 118, 0.8);
+    }
+
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    .footer {
+      background: var(--ink);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 64px 40px;
+      text-align: center;
+    }
+
+    .footer__logo {
+      display: block;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--parchment);
+      margin-bottom: 14px;
+    }
+
+    .footer__location {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--stone);
+      margin-bottom: 28px;
+    }
+
+    .footer__credits {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: rgba(138, 127, 118, 0.45);
+    }
+
+
+    /* ============================================================
+       RESPONSIVE — single breakpoint at 768px
+       Everything collapses to single-column.
+    ============================================================ */
+    @media (max-width: 768px) {
+
+      /* Hero: image stacks above text */
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .hero__image {
+        height: 50vh;
+        order: -1;      /* image first on mobile */
+      }
+
+      .hero__text {
+        padding: 56px 32px 72px;
+      }
+
+      .hero__brand {
+        top: 28px;
+        left: 32px;
+      }
+
+      /* Header nav: hidden on mobile (could add a hamburger later) */
+      .header__nav {
+        display: none;
+      }
+
+      /* Heritage */
+      .heritage {
+        padding: 80px 28px;
+      }
+
+      /* Specs: spec table above, swatches below */
+      .specs {
+        padding: 80px 28px;
+      }
+
+      .specs__inner {
+        grid-template-columns: 1fr;
+        gap: 52px;
+      }
+
+      /* Gallery: single column */
+      .gallery__grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+
+      .gallery__item--tall {
+        grid-row: auto;
+        height: 420px;
+      }
+
+      .gallery__item:not(.gallery__item--tall) {
+        height: 260px;
+      }
+
+      /* Construction: image shorter, text below (no negative space column) */
+      .construction__image {
+        height: 280px;
+      }
+
+      .construction__body {
+        grid-template-columns: 1fr;
+        padding: 56px 28px 0;
+      }
+
+      /* Hide the intentional blank column on mobile — space is precious */
+      .construction__body > div:first-child {
+        display: none;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+
+  <!-- ============================================================
+       HEADER
+       Transparent initially (logo visible over dark hero).
+       JavaScript adds .scrolled after 80px to give it a background.
+  ============================================================ -->
+  <header class="header" id="header">
+    <div class="header__inner">
+      <a href="#" class="header__logo" aria-label="Forge &amp; Patina — home">
+        Forge &amp; Patina
+      </a>
+      <nav class="header__nav" aria-label="Primary">
+        <a href="#heritage">Heritage</a>
+        <a href="#halden">The Halden 71</a>
+        <a href="#atelier">Atelier</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+
+  <!-- ============================================================
+       HERO
+       Left panel: product name + tagline + CTA on ink background.
+       Right panel: hero-wheel.jpg fills the frame edge to edge.
+       The image's own dark background merges naturally with the
+       left panel — no overlay needed.
+  ============================================================ -->
+  <section class="hero">
+
+    <div class="hero__text">
+
+      <!-- Brand mark — anchored to top of panel, above centered content -->
+      <span class="label hero__brand" data-hero="label">
+        Forge &amp; Patina
+      </span>
+
+      <!-- Vertically centered product block -->
+      <div class="hero__content">
+        <h1 class="hero__title" data-hero="title">
+          The<br>Halden 71
+        </h1>
+        <p class="hero__tagline" data-hero="tagline">
+          Born at Le Mans, 1971.<br>Recast for the road.
+        </p>
+        <div class="hero__rule" data-hero="rule"></div>
+        <a href="#halden" class="btn" data-hero="btn">
+          <span class="btn__text">Configure</span>
+        </a>
+      </div>
+
+    </div>
+
+    <div class="hero__image">
+      <!-- loading="eager" — this is above the fold, load immediately -->
+      <img
+        src="images/hero-wheel.jpg"
+        alt="The Halden 71 forged wheel in Polished Bronze"
+        loading="eager"
+      />
+    </div>
+
+  </section>
+
+
+  <!-- ============================================================
+       HERITAGE
+       The origin story. Spare, editorial, centered.
+       Three short paragraphs — the last one is the punchline.
+  ============================================================ -->
+  <section class="heritage" id="heritage">
+    <div class="heritage__inner">
+
+      <span class="label" data-animate>Since 1971</span>
+      <div class="rule" data-animate></div>
+
+      <h2 class="heritage__heading" data-animate>
+        Forged for endurance.<br>Reissued by craft.
+      </h2>
+
+      <div class="heritage__copy">
+        <p data-animate>
+          In the summer of 1971, three privately entered Porsches arrived at Le Mans on wheels
+          forged by a small Cologne workshop — lighter than anything in production, with a profile
+          drawn for the circuit.
+        </p>
+        <p data-animate data-delay="150">
+          The original forging dies were lost for thirty years. We found the drawings in a storage
+          unit outside Stuttgart.
+        </p>
+        <p data-animate data-delay="300">
+          The Halden 71 is what they built.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       SPECS
+       Technical data on the left. Finish swatches on the right.
+       The swatches are CSS gradient blocks — no images required.
+  ============================================================ -->
+  <section class="specs" id="halden">
+    <div class="specs__inner">
+
+      <!-- Left column: spec table + size selector -->
+      <div>
+        <span class="label" data-animate>Technical Data</span>
+        <div class="rule" data-animate></div>
+        <h2 class="specs__heading" data-animate>The Halden 71</h2>
+
+        <!-- dl (definition list) is the correct semantic element for spec data -->
+        <dl class="specs__table" data-animate>
+          <div class="specs__row">
+            <dt>Construction</dt>
+            <dd>Three-piece forged</dd>
+          </div>
+          <div class="specs__row">
+            <dt>Material</dt>
+            <dd>6061-T6 aerospace billet</dd>
+          </div>
+          <div class="specs__row">
+            <dt>Centre</dt>
+            <dd>Mono-block forged, CNC-machined</dd>
+          </div>
+          <div class="specs__row">
+            <dt>Lip</dt>
+            <dd>Centre-spun</dd>
+          </div>
+          <div class="specs__row">
+            <dt>Barrel</dt>
+            <dd>Hand-fitted, stepped</dd>
+          </div>
+          <div class="specs__row">
+            <dt>Diameters</dt>
+            <dd>17&#8243; &mdash; 18&#8243; &mdash; 19&#8243;</dd>
+          </div>
+          <div class="specs__row">
+            <dt>Weight (17&#8243;)</dt>
+            <dd>7.2 kg</dd>
+          </div>
+          <div class="specs__row">
+            <dt>PCD</dt>
+            <dd>5&times;130 &middot; 5&times;120 &middot; custom</dd>
+          </div>
+          <div class="specs__row">
+            <dt>Lead time</dt>
+            <dd>12 weeks from order</dd>
+          </div>
+        </dl>
+
+        <!-- Size selector — visual only, JS handles active state toggle -->
+        <div class="specs__sizes" data-animate data-delay="150">
+          <span class="label">Diameter</span>
+          <div class="size-options" role="group" aria-label="Select diameter">
+            <button class="size-option active" aria-pressed="true">17&#8243;</button>
+            <button class="size-option" aria-pressed="false">18&#8243;</button>
+            <button class="size-option" aria-pressed="false">19&#8243;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column: finish swatches -->
+      <div class="specs__finishes" data-animate data-delay="250">
+        <span class="label">Available Finishes</span>
+        <div class="rule"></div>
+        <div class="finishes">
+
+          <div class="finish">
+            <div
+              class="finish__swatch finish__swatch--bronze"
+              role="img"
+              aria-label="Polished Bronze colour swatch"
+            ></div>
+            <div>
+              <span class="finish__name">Polished Bronze</span>
+              <span class="finish__code">PB-71</span>
+            </div>
+          </div>
+
+          <div class="finish">
+            <div
+              class="finish__swatch finish__swatch--magnesium"
+              role="img"
+              aria-label="Brushed Magnesium colour swatch"
+            ></div>
+            <div>
+              <span class="finish__name">Brushed Magnesium</span>
+              <span class="finish__code">BM-71</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       GALLERY
+       Asymmetric grid: portrait (wheel-on-car) spans left column
+       across both rows; two landscape images stack on the right.
+       Dark ink background — images materialise from the dark.
+  ============================================================ -->
+  <section class="gallery" id="gallery">
+
+    <div class="gallery__header">
+      <span class="label" style="color: var(--stone)" data-animate>
+        The Wheel
+      </span>
+    </div>
+
+    <div class="gallery__grid">
+
+      <!-- Left: portrait, spans both rows -->
+      <div class="gallery__item gallery__item--tall" data-animate>
+        <img
+          src="images/wheel-on-car.jpg"
+          alt="The Halden 71 mounted on an early 1970s Porsche 911"
+          loading="lazy"
+        />
+      </div>
+
+      <!-- Right top: detail macro -->
+      <div class="gallery__item" data-animate data-delay="150">
+        <img
+          src="images/wheel-detail.jpg"
+          alt="Halden 71 spoke and hub detail, Polished Bronze"
+          loading="lazy"
+        />
+      </div>
+
+      <!-- Right bottom: wheel as object -->
+      <div class="gallery__item" data-animate data-delay="300">
+        <img
+          src="images/hero-wheel.jpg"
+          alt="The Halden 71, Polished Bronze"
+          loading="lazy"
+        />
+      </div>
+
+    </div>
+
+    <p class="gallery__caption">
+      The Halden 71 — Polished Bronze
+    </p>
+
+  </section>
+
+
+  <!-- ============================================================
+       CONSTRUCTION / ATELIER
+       Workshop image runs full width across the top.
+       Below: generous negative space on the left, text on the right.
+       The emptiness is intentional — it lets the paragraph breathe.
+  ============================================================ -->
+  <section class="construction" id="atelier">
+
+    <div class="construction__image" data-animate>
+      <img
+        src="images/workshop.jpg"
+        alt="The Forge &amp; Patina atelier, Cologne"
+        loading="lazy"
+      />
+    </div>
+
+    <div class="construction__body">
+
+      <!-- Intentional negative space — left column is empty by design -->
+      <div aria-hidden="true"></div>
+
+      <div class="construction__text">
+        <span class="label" data-animate>Atelier</span>
+        <div class="rule" data-animate></div>
+        <h2 class="construction__heading" data-animate>
+          Built by hand.<br>One wheel<br>at a time.
+        </h2>
+        <div class="construction__copy">
+          <p data-animate>
+            Each Halden 71 is assembled by a single craftsman at our Cologne atelier.
+            The three-piece construction &mdash; billet centre, centre-spun lip,
+            hand-fitted barrel &mdash; is torqued and inspected over four working days.
+          </p>
+          <p data-animate data-delay="150">
+            Nothing leaves until it is correct.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="footer" id="contact">
+    <span class="footer__logo">Forge &amp; Patina</span>
+    <p class="footer__location">Forged in Cologne &mdash; MMXXV</p>
+    <p class="footer__credits">
+      Photography: Chudi Njeako &middot; Stuart Garage &middot; Rob Wingate &middot; Bradikan<br>
+      All photographs sourced from Unsplash and used under the Unsplash License.
+    </p>
+  </footer>
+
+
+  <!-- ============================================================
+       JAVASCRIPT
+       Three jobs, kept separate and commented for clarity:
+         1. Hero entrance animation (setTimeout sequence)
+         2. Scroll-triggered fade-ins (Intersection Observer)
+         3. Header scroll state + active nav tracking
+         4. Size selector toggle
+  ============================================================ -->
+  <script>
+
+    // ─────────────────────────────────────────────────────────────
+    // 1. HERO ENTRANCE ANIMATION
+    //
+    // When the page loads, hero text elements appear one by one.
+    // Each element has a data-hero attribute (label, title, etc.).
+    // We use setTimeout to fire each one after a fixed delay,
+    // creating a staggered sequence that feels like the page
+    // coming to life. Adding .is-visible triggers the CSS opacity
+    // and transform transitions defined above.
+    // ─────────────────────────────────────────────────────────────
+
+    const heroSequence = [
+      { selector: '[data-hero="label"]',   delay: 400  },
+      { selector: '[data-hero="title"]',   delay: 750  },
+      { selector: '[data-hero="tagline"]', delay: 1100 },
+      { selector: '[data-hero="rule"]',    delay: 1350 },
+      { selector: '[data-hero="btn"]',     delay: 1500 },
+    ];
+
+    // Wait for all assets (including fonts) before starting the sequence.
+    // 'load' fires later than 'DOMContentLoaded' — it waits for images too —
+    // which ensures there's no flash of unstyled content before we animate.
+    window.addEventListener('load', () => {
+      heroSequence.forEach(({ selector, delay }) => {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        setTimeout(() => el.classList.add('is-visible'), delay);
+      });
+    });
+
+
+    // ─────────────────────────────────────────────────────────────
+    // 2. SCROLL-TRIGGERED FADE-INS
+    //
+    // Intersection Observer is a browser API that calls a function
+    // whenever a watched element enters or exits the viewport.
+    // It's far more efficient than listening to the scroll event,
+    // because the browser handles the detection natively.
+    //
+    // Here's how it works:
+    //   - We select every element with [data-animate].
+    //   - We create one IntersectionObserver with our callback.
+    //   - We register ("observe") each element with that observer.
+    //   - When an element crosses the threshold, the callback fires.
+    //   - We add .is-visible, which triggers the CSS transition.
+    //   - We then stop watching that element — it only needs to
+    //     animate once.
+    //
+    // If an element has data-delay="120", we apply that as a CSS
+    // transitionDelay so sibling elements stagger nicely.
+    // ─────────────────────────────────────────────────────────────
+
+    const animatedEls = document.querySelectorAll('[data-animate]');
+
+    const scrollObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+
+        const el = entry.target;
+
+        // Apply stagger delay if the element specifies one
+        const delay = el.dataset.delay || 0;
+        el.style.transitionDelay = delay + 'ms';
+
+        // This class change triggers the CSS transition
+        el.classList.add('is-visible');
+
+        // Unobserve after animating — no need to watch it anymore
+        scrollObserver.unobserve(el);
+      });
+    }, {
+      threshold: 0.12,     // fire when 12% of the element is in the viewport
+      rootMargin: '0px',   // no extra margin — use the real viewport edges
+    });
+
+    // Hand every [data-animate] element to the observer
+    animatedEls.forEach(el => scrollObserver.observe(el));
+
+
+    // ─────────────────────────────────────────────────────────────
+    // 3A. HEADER BACKGROUND ON SCROLL
+    //
+    // The header starts transparent (over the dark hero image).
+    // Once the user scrolls 80px, we add .scrolled — CSS then
+    // transitions the background to var(--ink).
+    //
+    // { passive: true } tells the browser this listener will never
+    // call preventDefault(), so it can process scroll events
+    // without waiting for our function to finish first.
+    // ─────────────────────────────────────────────────────────────
+
+    const header = document.querySelector('.header');
+
+    window.addEventListener('scroll', () => {
+      // classList.toggle(name, force): add if force is true, remove if false
+      header.classList.toggle('scrolled', window.scrollY > 80);
+    }, { passive: true });
+
+
+    // ─────────────────────────────────────────────────────────────
+    // 3B. ACTIVE NAV LINK TRACKING
+    //
+    // A second IntersectionObserver watches the page sections.
+    // When a section becomes 35% visible (accounting for the fixed
+    // header via rootMargin), we find the matching nav link by its
+    // href and give it the .active class.
+    //
+    // This is more reliable than a scroll-position calculation
+    // because IntersectionObserver handles all the geometry for us.
+    // ─────────────────────────────────────────────────────────────
+
+    const navLinks = document.querySelectorAll('.header__nav a');
+
+    // Select every section and footer that has an id a nav link points to
+    const sections = document.querySelectorAll('section[id], footer[id]');
+
+    const navObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+
+        // Remove .active from every nav link
+        navLinks.forEach(link => link.classList.remove('active'));
+
+        // Find the link whose href matches this section's id
+        const id = entry.target.id;
+        const matchingLink = document.querySelector(`.header__nav a[href="#${id}"]`);
+        if (matchingLink) matchingLink.classList.add('active');
+      });
+    }, {
+      threshold: 0.35,
+      // Shrink the top of the viewport by the header height.
+      // This stops the header from covering sections and triggering
+      // the wrong nav item.
+      rootMargin: '-64px 0px 0px 0px',
+    });
+
+    sections.forEach(section => navObserver.observe(section));
+
+
+    // ─────────────────────────────────────────────────────────────
+    // 4. SIZE OPTION SELECTOR
+    //
+    // When a size button is clicked:
+    //   - Remove .active and set aria-pressed="false" on all buttons
+    //   - Add .active and set aria-pressed="true" on the clicked one
+    //
+    // aria-pressed is an ARIA attribute that tells screen readers
+    // whether a toggle button is currently selected.
+    // ─────────────────────────────────────────────────────────────
+
+    const sizeButtons = document.querySelectorAll('.size-option');
+
+    sizeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        sizeButtons.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+      });
+    });
+
+  </script>
+
+</body>
+</html>
